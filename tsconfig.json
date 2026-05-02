@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    // --- SAÍDA ---
+    "types": ["node"],
+    "outDir": "./dist",        // Onde o JS compilado vai parar
+    "rootDir": "./src",        // Onde está seu código fonte
+
+    // --- QUALIDADE DO CÓDIGO ---
+    "strict": true,            // Habilita TODAS as verificações rigorosas
+                               // Nunca desative isso. Nunca.
+    
+    "noUncheckedIndexedAccess": true,  // array[0] pode ser undefined — TypeScript vai te lembrar
+    "noImplicitReturns": true,         // Toda função deve retornar explicitamente
+    "noFallthroughCasesInSwitch": true,// Evita bugs de switch sem break
+
+    // --- MÓDULOS ---
+    "module": "NodeNext",      // Suporte moderno a ES Modules no Node
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",        // Compila para ES2022 (Node 18+ suporta)
+    
+    // --- QUALIDADE DE VIDA ---
+    "esModuleInterop": true,   // Permite import sem * as (import express from 'express')
+    "forceConsistentCasingInFileNames": true, // Linux é case-sensitive, Windows não — isso evita bugs de deploy
+    "skipLibCheck": true,      // Não verifica tipos das libs externas (mais rápido)
+    
+    // --- PATHS (alias de importação) ---
+    // "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]         // Permite: import { X } from '@/modules/auth/...'
+                               // Em vez de: import { X } from '../../../modules/auth/...'
+    },
+
+    // --- DECORATORS (para DI futura) ---
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "tests"]
+}
