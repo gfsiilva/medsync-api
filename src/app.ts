@@ -7,6 +7,8 @@ import { env } from '@/config/env.js'
 import { AppError } from '@/shared/errors/AppError.js'
 import { ZodError } from 'zod'
 import { authRoutes } from '@/modules/auth/auth.routes.js'
+import { usersRoutes } from '@/modules/users/users.routes.js'
+
 
 export function buildApp() {
   const app = fastify({
@@ -61,7 +63,8 @@ export function buildApp() {
     return { status: 'ok', timestamp: new Date().toISOString() }
   })
 
-  app.register(authRoutes, { prefix: '/api/v1' })
+app.register(authRoutes, { prefix: '/api/v1' })
+app.register(usersRoutes, { prefix: '/api/v1' })
 
   return app
 }
