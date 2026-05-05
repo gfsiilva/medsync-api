@@ -8,6 +8,8 @@ import { AppError } from '@/shared/errors/AppError.js'
 import { ZodError } from 'zod'
 import { authRoutes } from '@/modules/auth/auth.routes.js'
 import { usersRoutes } from '@/modules/users/users.routes.js'
+import { doctorsRoutes } from '@/modules/doctors/doctors.routes.js'
+
 
 
 export function buildApp() {
@@ -65,6 +67,8 @@ export function buildApp() {
 
 app.register(authRoutes, { prefix: '/api/v1' })
 app.register(usersRoutes, { prefix: '/api/v1' })
+app.register(doctorsRoutes, { prefix: '/api/v1' })
+
 
   return app
 }
