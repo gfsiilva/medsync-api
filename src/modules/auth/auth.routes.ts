@@ -1,9 +1,87 @@
-import type { FastifyInstance } from "fastify";
-import { AuthController } from "./auth.controller.js";
+// src/modules/auth/auth.routes.ts
+import type { FastifyInstance } from 'fastify'
+import { AuthController } from './auth.controller.js'
 
 const authController = new AuthController()
 
 export async function authRoutes(app: FastifyInstance) {
-     app.post('/auth/register', authController.register.bind(authController))
-  app.post('/auth/login', authController.login.bind(authController))
+  app.post('/auth/register', {
+    schema: {
+      tags: ['Auth'],
+      summary: 'Cadastrar novo usuário',
+      body: {
+        type: 'object',
+        required: ['email', 'password', 'name'],
+        properties: {
+          email: { type: 'string', format: 'email', example: 'joao@email.com' },
+          password: { type: 'string', minLength: 8, example: 'Senha123' },
+          name: { type: 'string', example: 'João Silva' },
+          role: { type: 'string', enum: ['PATIENT', 'DOCTOR'], default: 'PATIENT' },
+        },
+      },
+      response: {
+        201: {
+          description: 'Usuário criado com sucesso',
+          type: 'object',
+          properties: {
+            status: { type: 'string', example: 'success' },
+            data: {
+              type: 'object',
+              properties: {
+                user: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    email: { type: 'string' },
+                    role: { type: 'string' },
+                    createdAt: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+        },
+        409: { description: 'Email já cadastrado' },
+      },
+    },
+  }, authController.register.bind(authController))
+
+  app.post('/auth/login', {
+    schema: {
+      tags: ['Auth'],
+      summary: 'Fazer login',
+      body: {
+        type: 'object',
+        required: ['email', 'password'],
+        properties: {
+          email: { type: 'string', format: 'email', example: 'joao@email.com' },
+          password: { type: 'string', example: 'Senha123' },
+        },
+      },
+      response: {
+        200: {
+          description: 'Login realizado com sucesso',
+          type: 'object',
+          properties: {
+            status: { type: 'string', example: 'success' },
+            data: {
+              type: 'object',
+              properties: {
+                user: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    email: { type: 'string' },
+                    role: { type: 'string' },
+                  },
+                },
+                token: { type: 'string', description: 'JWT Token' },
+              },
+            },
+          },
+        },
+        401: { description: 'Email ou senha inválidos' },
+      },
+    },
+  }, authController.login.bind(authController))
 }

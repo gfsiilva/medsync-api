@@ -4,29 +4,72 @@ import { AppointmentsController } from './appointments.controller.js'
 import { authenticate } from '@/shared/middlewares/authenticate.js'
 
 const appointmentsController = new AppointmentsController()
+const securedRoute = { security: [{ bearerAuth: [] }] }
 
 export async function appointmentsRoutes(app: FastifyInstance) {
-  // Todas as rotas de agendamento exigem autenticação
-  // Não faz sentido agendar sem saber quem é o paciente
+  app.post('/appointments', {
+    schema: {
+      ...securedRoute,
+      tags: ['Appointments'],
+      summary: 'Agendar consulta',
+      description: 'Apenas pacientes com perfil completo podem agendar',
+      body: {
+        type: 'object',
+        required: ['doctorId', 'date'],
+        properties: {
+          doctorId: { type: 'string', format: 'uuid' },
+          date: { type: 'string', format: 'date-time', example: '2025-06-15T10:00:00Z' },
+          notes: { type: 'string', example: 'Consulta de rotina' },
+        },
+      },
+      response: {
+        201: { description: 'Consulta agendada com sucesso' },
+        409: { description: 'Medico ja possui consulta neste horario' },
+      },
+    },
+    preHandler: [authenticate],
+  }, appointmentsController.create.bind(appointmentsController))
 
-  // Criar consulta — só PATIENT (validado no service)
-  app.post(
-    '/appointments',
-    { preHandler: [authenticate] },
-    appointmentsController.create.bind(appointmentsController)
-  )
+  app.patch('/appointments/:id/status', {
+    schema: {
+      ...securedRoute,
+      tags: ['Appointments'],
+      summary: 'Atualizar status da consulta',
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'ID da consulta' },
+        },
+      },
+      body: {
+        type: 'object',
+        required: ['status'],
+        properties: {
+          status: { type: 'string', enum: ['CONFIRMED', 'CANCELLED'] },
+        },
+      },
+    },
+    preHandler: [authenticate],
+  }, appointmentsController.updateStatus.bind(appointmentsController))
 
-  // Atualizar status — médico confirma, paciente ou médico cancela
-  app.patch<{ Params: { id: string } }>(
-  '/appointments/:id/status',
-  { preHandler: [authenticate] },
-  appointmentsController.updateStatus.bind(appointmentsController)
-)
-
-  // Listar minhas consultas — comportamento diferente por role
-  app.get(
-    '/appointments/mine',
-    { preHandler: [authenticate] },
-    appointmentsController.listMine.bind(appointmentsController)
-  )
+  app.get('/appointments/mine', {
+    schema: {
+      ...securedRoute,
+      tags: ['Appointments'],
+      summary: 'Listar minhas consultas',
+      description: 'Pacientes veem suas consultas. Medicos veem consultas com eles.',
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'number', default: 1 },
+          limit: { type: 'number', default: 10 },
+          status: {
+            type: 'string',
+            enum: ['SCHEDULED', 'CONFIRMED', 'CANCELLED', 'COMPLETED'],
+          },
+        },
+      },
+    },
+    preHandler: [authenticate],
+  }, appointmentsController.listMine.bind(appointmentsController))
 }
