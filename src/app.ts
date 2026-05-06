@@ -9,6 +9,10 @@ import { ZodError } from 'zod'
 import { authRoutes } from '@/modules/auth/auth.routes.js'
 import { usersRoutes } from '@/modules/users/users.routes.js'
 import { doctorsRoutes } from '@/modules/doctors/doctors.routes.js'
+import { appointmentsRoutes } from '@/modules/appointments/appointments.routes.js'
+import { patientsRoutes } from '@/modules/patients/patients.routes.js'
+
+
 
 
 
@@ -68,6 +72,10 @@ export function buildApp() {
 app.register(authRoutes, { prefix: '/api/v1' })
 app.register(usersRoutes, { prefix: '/api/v1' })
 app.register(doctorsRoutes, { prefix: '/api/v1' })
+app.register(appointmentsRoutes, { prefix: '/api/v1' })
+app.register(patientsRoutes, { prefix: '/api/v1' })
+
+
 
 
   return app

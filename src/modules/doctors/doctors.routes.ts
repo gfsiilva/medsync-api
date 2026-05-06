@@ -7,7 +7,7 @@ const doctorsController = new DoctorsController()
 
 export async function doctorsRoutes(app:  FastifyInstance) {
     app.get('/doctors', doctorsController.listDoctors.bind(doctorsController))
-    app.get('/doctors/:id', doctorsController.getProfile.bind(doctorsController))
+app.get<{ Params: { id: string } }>('/doctors/:id', doctorsController.getProfile.bind(doctorsController))
     
     app.post(
   '/doctors/profile',
