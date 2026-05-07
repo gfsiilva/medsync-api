@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     // --- SAÍDA ---
+    "ignoreDeprecations": "6.0",
     "types": ["node"],
     "outDir": "./dist",        // Onde o JS compilado vai parar
     "rootDir": "./src",        // Onde está seu código fonte
@@ -24,7 +25,7 @@
     "skipLibCheck": true,      // Não verifica tipos das libs externas (mais rápido)
     
     // --- PATHS (alias de importação) ---
-    // "baseUrl": ".",
+   "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]         // Permite: import { X } from '@/modules/auth/...'
                                // Em vez de: import { X } from '../../../modules/auth/...'
