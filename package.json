@@ -7,6 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc && tsc-alias",
     "start": "node dist/server.js",
+    "postinstall": "prisma generate",
     "test": "vitest",
     "db:migrate": "prisma migrate dev --url \"$DIRECT_URL\"",
     "db:migrate:win": "prisma migrate dev --url \"%DIRECT_URL%\"",
