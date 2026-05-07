@@ -6,6 +6,12 @@ const authController = new AuthController()
 
 export async function authRoutes(app: FastifyInstance) {
   app.post('/auth/register', {
+    config: {
+      rateLimit: {
+        max: 3,
+        timeWindow: '1 hour',
+      },
+    },
     schema: {
       tags: ['Auth'],
       summary: 'Cadastrar novo usuário',
@@ -42,11 +48,18 @@ export async function authRoutes(app: FastifyInstance) {
           },
         },
         409: { description: 'Email já cadastrado' },
+        429: { description: 'Muitos cadastros. Tente novamente em 1 hora' },
       },
     },
   }, authController.register.bind(authController))
 
   app.post('/auth/login', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '1 minute',
+      },
+    },
     schema: {
       tags: ['Auth'],
       summary: 'Fazer login',
@@ -81,6 +94,7 @@ export async function authRoutes(app: FastifyInstance) {
           },
         },
         401: { description: 'Email ou senha inválidos' },
+        429: { description: 'Muitas tentativas. Tente novamente em 1 minuto' },
       },
     },
   }, authController.login.bind(authController))

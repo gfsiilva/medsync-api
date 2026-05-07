@@ -5,18 +5,15 @@ import helmet from '@fastify/helmet'
 import jwt from '@fastify/jwt'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
+import rateLimit from '@fastify/rate-limit'
 import { env } from '@/config/env.js'
 import { AppError } from '@/shared/errors/AppError.js'
 import { ZodError } from 'zod'
 import { authRoutes } from '@/modules/auth/auth.routes.js'
 import { usersRoutes } from '@/modules/users/users.routes.js'
 import { doctorsRoutes } from '@/modules/doctors/doctors.routes.js'
-import { appointmentsRoutes } from '@/modules/appointments/appointments.routes.js'
 import { patientsRoutes } from '@/modules/patients/patients.routes.js'
-
-
-
-
+import { appointmentsRoutes } from '@/modules/appointments/appointments.routes.js'
 
 export function buildApp() {
   const app = fastify({
@@ -32,7 +29,17 @@ export function buildApp() {
     },
   })
 
-  // === SWAGGER — deve ser registrado ANTES das rotas ===
+  // Rate limiting global — registrado antes de tudo
+  app.register(rateLimit, {
+    timeWindow: '1 minute',
+    max: 100,
+    addHeadersOnExceeding: {
+      'x-ratelimit-limit': true,
+      'x-ratelimit-remaining': true,
+      'x-ratelimit-reset': true,
+    },
+  })
+
   app.register(swagger, {
     openapi: {
       openapi: '3.0.0',
@@ -60,7 +67,6 @@ A API usa **JWT Bearer Token**. Para acessar rotas protegidas:
           email: 'contato@medsync.com',
         },
       },
-      // Define o esquema de autenticação JWT
       components: {
         securitySchemes: {
           bearerAuth: {
@@ -81,35 +87,41 @@ A API usa **JWT Bearer Token**. Para acessar rotas protegidas:
     },
   })
 
-  // Interface visual do Swagger
   app.register(swaggerUi, {
-    routePrefix: '/docs',  // Acesse em http://localhost:3333/docs
+    routePrefix: '/docs',
     uiConfig: {
-      docExpansion: 'list',      // Mostra as rotas colapsadas por padrão
-      deepLinking: true,         // Permite linkar para rotas específicas
-      persistAuthorization: true, // Mantém o token ao navegar
+      docExpansion: 'list',
+      deepLinking: true,
+      persistAuthorization: true,
     },
     staticCSP: true,
   })
 
   app.register(helmet, {
-    contentSecurityPolicy: false, // Desativa CSP para o Swagger UI funcionar
+    contentSecurityPolicy: false,
   })
 
-  app.register(helmet)
   app.register(cors, {
     origin: env.ALLOWED_ORIGINS.split(','),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   })
 
-  // Registra o plugin JWT com a chave secreta
   app.register(jwt, {
     secret: env.JWT_SECRET,
   })
 
   // Error handler global
-  app.setErrorHandler((error, request, reply) => {
+  app.setErrorHandler((error: any, request, reply) => {
+    // Rate limit atingido
+    if (error.statusCode === 429) {
+      return reply.status(429).send({
+        status: 'error',
+        code: 'TOO_MANY_REQUESTS',
+        message: error.message,
+      })
+    }
+
     if (error instanceof ZodError) {
       return reply.status(400).send({
         status: 'error',
@@ -135,19 +147,29 @@ A API usa **JWT Bearer Token**. Para acessar rotas protegidas:
     })
   })
 
-  // Rotas
-  app.get('/health', async () => {
+  app.get('/health', {
+    schema: {
+      tags: ['Health'],
+      summary: 'Verifica se a API está online',
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            status: { type: 'string', example: 'ok' },
+            timestamp: { type: 'string', example: '2025-01-01T00:00:00.000Z' },
+          },
+        },
+      },
+    },
+  }, async () => {
     return { status: 'ok', timestamp: new Date().toISOString() }
   })
 
-app.register(authRoutes, { prefix: '/api/v1' })
-app.register(usersRoutes, { prefix: '/api/v1' })
-app.register(doctorsRoutes, { prefix: '/api/v1' })
-app.register(appointmentsRoutes, { prefix: '/api/v1' })
-app.register(patientsRoutes, { prefix: '/api/v1' })
-
-
-
+  app.register(authRoutes, { prefix: '/api/v1' })
+  app.register(usersRoutes, { prefix: '/api/v1' })
+  app.register(doctorsRoutes, { prefix: '/api/v1' })
+  app.register(patientsRoutes, { prefix: '/api/v1' })
+  app.register(appointmentsRoutes, { prefix: '/api/v1' })
 
   return app
 }
