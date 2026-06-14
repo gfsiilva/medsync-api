@@ -18,6 +18,7 @@ export class AuthService {
     const user = await this.authRepository.create({
       email: input.email,
       password: hashedPassword,
+      name: input.name,
       role: input.role,
     })
 
@@ -37,6 +38,7 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email,
+      name: user.name,
       role: user.role,
     }
   }

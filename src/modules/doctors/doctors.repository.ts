@@ -13,7 +13,7 @@ export class DoctorsRepository {
       where: { id },
       include: {
         user: {
-          select: { email: true, role: true }
+          select: { name: true, email: true, role: true }
         },
         availabilities: true,
       }
@@ -69,7 +69,7 @@ export class DoctorsRepository {
             bio: true,
             consultationFee: true,
             user: {
-                select: { email: true }
+                select: { name: true, email: true }
             }
         },
         orderBy: { specialty: 'asc' }
@@ -85,4 +85,4 @@ export class DoctorsRepository {
  }
 
 }
-} 
+}

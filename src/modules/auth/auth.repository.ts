@@ -1,5 +1,5 @@
 import { prisma } from '@/config/database.js'
-import type {RegisterInput} from './auth.schema.js'
+import type { RegisterInput } from './auth.schema.js'
 
 export class AuthRepository {
 
@@ -15,12 +15,13 @@ export class AuthRepository {
         })
     }
 
- async create(data: { email: string; password: string; role: RegisterInput['role'] }) {
+ async create(data: { email: string; password: string; name: string; role: RegisterInput['role'] }) {
     return prisma.user.create({
       data,
         select: {
             id: true,
             email: true,
+            name: true,
             role: true,
             createdAt: true,
         },

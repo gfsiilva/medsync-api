@@ -23,7 +23,11 @@ export class AppointmentsRepository {
       },
       include: {
         doctor: {
-          select: { crm: true, specialty: true }
+          select: {
+            crm: true,
+            specialty: true,
+            user: { select: { name: true, email: true } }
+          }
         }
       }
     })
@@ -38,14 +42,14 @@ export class AppointmentsRepository {
           userId: true,
           crm: true,
           specialty: true,
-          user: { select: { email: true } },
+          user: { select: { name: true, email: true } },
         }
       },
       patient: {
         select: {
           userId: true,
           cpf: true,
-          user: { select: { email: true } },
+          user: { select: { name: true, email: true } },
         }
       },
     }
@@ -74,7 +78,13 @@ export class AppointmentsRepository {
         skip,
         take: limit,
         include: {
-          doctor: { select: { crm: true, specialty: true } }
+          doctor: {
+            select: {
+              crm: true,
+              specialty: true,
+              user: { select: { name: true, email: true } }
+            }
+          }
         },
         orderBy: { date: 'asc' }
       }),
@@ -99,7 +109,13 @@ export class AppointmentsRepository {
         skip,
         take: limit,
         include: {
-          patient: { select: { cpf: true, phone: true } }
+          patient: {
+            select: {
+              cpf: true,
+              phone: true,
+              user: { select: { name: true, email: true } }
+            }
+          }
         },
         orderBy: { date: 'asc' }
       }),

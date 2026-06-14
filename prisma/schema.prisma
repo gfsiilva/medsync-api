@@ -33,6 +33,7 @@ model User {
   // Não é sequencial — mais difícil de adivinhar
   email     String   @unique
   password  String // Sempre armazenamos o HASH, nunca a senha
+  name      String?
   role      Role     @default(PATIENT)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt // Prisma atualiza automaticamente
