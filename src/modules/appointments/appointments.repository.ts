@@ -30,14 +30,27 @@ export class AppointmentsRepository {
   }
 
   async findById(id: string) {
-    return prisma.appointment.findUnique({
-      where: { id },
-      include: {
-        doctor: { select: { crm: true, specialty: true, userId: true } },
-        patient: { select: { cpf: true, userId: true } },
-      }
-    })
-  }
+  return prisma.appointment.findUnique({
+    where: { id },
+    include: {
+      doctor: {
+        select: {
+          userId: true,
+          crm: true,
+          specialty: true,
+          user: { select: { email: true } },
+        }
+      },
+      patient: {
+        select: {
+          userId: true,
+          cpf: true,
+          user: { select: { email: true } },
+        }
+      },
+    }
+  })
+}
 
   async updateStatus(id: string, status: string) {
     return prisma.appointment.update({

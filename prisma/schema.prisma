@@ -28,51 +28,51 @@ enum AppointmentStatus {
 // === MODELS ===
 
 model User {
-  id        String   @id @default(uuid())  // UUID é melhor que integer em APIs públicas
-                                            // Não expõe quantos usuários você tem
-                                            // Não é sequencial — mais difícil de adivinhar
+  id        String   @id @default(uuid()) // UUID é melhor que integer em APIs públicas
+  // Não expõe quantos usuários você tem
+  // Não é sequencial — mais difícil de adivinhar
   email     String   @unique
-  password  String                          // Sempre armazenamos o HASH, nunca a senha
+  password  String // Sempre armazenamos o HASH, nunca a senha
   role      Role     @default(PATIENT)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt             // Prisma atualiza automaticamente
+  updatedAt DateTime @updatedAt // Prisma atualiza automaticamente
 
-  // Relações — um User pode ser Doctor OU Patient (não os dois)
-  doctor  Doctor?   // ? = opcional (pode ser null)
+  // Relações — um User pode ser Doctor OU Patient (não os dois) 
+  doctor  Doctor? // ? = opcional (pode ser null)
   patient Patient?
 
-  @@map("users")   // Nome da tabela no banco — convenção: snake_case plural
+  @@map("users") // Nome da tabela no banco — convenção: snake_case plural
 }
 
 model Doctor {
-  id             String  @id @default(uuid())
-  userId         String  @unique              // FK para User
-  crm            String  @unique              // Registro no conselho médico
-  specialty      String
-  bio            String?                      // ? = campo opcional
-  avatarUrl      String?
-  consultationFee Decimal @db.Decimal(10, 2) // Decimal para dinheiro — NUNCA Float!
-                                              // Float tem imprecisão: 0.1 + 0.2 = 0.30000000000000004
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String   @id @default(uuid())
+  userId          String   @unique // FK para User
+  crm             String   @unique // Registro no conselho médico
+  specialty       String
+  bio             String? // ? = campo opcional
+  avatarUrl       String?
+  consultationFee Decimal  @db.Decimal(10, 2) // Decimal para dinheiro — NUNCA Float!
+  // Float tem imprecisão: 0.1 + 0.2 = 0.30000000000000004
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // Relações
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  appointments Appointment[]
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments   Appointment[]
   availabilities DoctorAvailability[]
 
   @@map("doctors")
 }
 
 model Patient {
-  id          String    @id @default(uuid())
-  userId      String    @unique
-  cpf         String    @unique
-  phone       String
-  birthDate   DateTime
-  address     String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  cpf       String   @unique
+  phone     String
+  birthDate DateTime
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   appointments Appointment[]
@@ -85,9 +85,9 @@ model Appointment {
   doctorId  String
   patientId String
   date      DateTime
-  duration  Int               @default(30)  // duração em minutos
+  duration  Int               @default(30) // duração em minutos
   status    AppointmentStatus @default(SCHEDULED)
-  notes     String?           // Observações médicas
+  notes     String? // Observações médicas
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 
@@ -97,20 +97,18 @@ model Appointment {
   // Índice composto — garante que um médico não tenha
   // duas consultas no mesmo horário
   @@unique([doctorId, date])
-
   // Índices melhoram performance de queries frequentes
   @@index([patientId])
   @@index([date])
-
   @@map("appointments")
 }
 
 model DoctorAvailability {
-  id        String   @id @default(uuid())
+  id        String @id @default(uuid())
   doctorId  String
-  dayOfWeek Int      // 0 = domingo, 1 = segunda, ..., 6 = sábado
-  startTime String   // "08:00"
-  endTime   String   // "18:00"
+  dayOfWeek Int // 0 = domingo, 1 = segunda, ..., 6 = sábado
+  startTime String // "08:00"
+  endTime   String // "18:00"
 
   doctor Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 

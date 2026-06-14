@@ -30,15 +30,15 @@ export function buildApp() {
   })
 
   // Rate limiting global — registrado antes de tudo
-  app.register(rateLimit, {
-    timeWindow: '1 minute',
-    max: 100,
-    addHeadersOnExceeding: {
-      'x-ratelimit-limit': true,
-      'x-ratelimit-remaining': true,
-      'x-ratelimit-reset': true,
-    },
-  })
+ app.register(rateLimit, {
+  timeWindow: '1 minute',
+  max: env.NODE_ENV === 'test' ? 1000 : 100, // sem limite em testes
+  addHeadersOnExceeding: {
+    'x-ratelimit-limit': true,
+    'x-ratelimit-remaining': true,
+    'x-ratelimit-reset': true,
+  },
+})
 
   app.register(swagger, {
     openapi: {
@@ -46,15 +46,7 @@ export function buildApp() {
       info: {
         title: 'MedSync API',
         description: `
-# MedSync API
 
-Sistema de gerenciamento de clínica médica.
-
-## Autenticação
-A API usa **JWT Bearer Token**. Para acessar rotas protegidas:
-1. Faça login em \`POST /api/v1/auth/login\`
-2. Copie o token retornado
-3. Clique em **Authorize** e cole o token
 
 ## Roles
 - **PATIENT** — pode agendar e ver suas consultas
@@ -113,39 +105,49 @@ A API usa **JWT Bearer Token**. Para acessar rotas protegidas:
 
   // Error handler global
   app.setErrorHandler((error: any, request, reply) => {
-    // Rate limit atingido
-    if (error.statusCode === 429) {
-      return reply.status(429).send({
-        status: 'error',
-        code: 'TOO_MANY_REQUESTS',
-        message: error.message,
-      })
-    }
-
-    if (error instanceof ZodError) {
-      return reply.status(400).send({
-        status: 'error',
-        code: 'VALIDATION_ERROR',
-        message: 'Dados inválidos',
-        errors: error.flatten().fieldErrors,
-      })
-    }
-
-    if (error instanceof AppError) {
-      return reply.status(error.statusCode).send({
-        status: 'error',
-        code: error.code,
-        message: error.message,
-      })
-    }
-
-    app.log.error(error)
-    return reply.status(500).send({
+  // Rate limit
+  if (error.statusCode === 429) {
+    return reply.status(429).send({
       status: 'error',
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Erro interno do servidor',
+      code: 'TOO_MANY_REQUESTS',
+      message: error.message,
     })
+  }
+
+  // Erro de validação do Fastify (schema das rotas)
+  if (error.code === 'FST_ERR_VALIDATION') {
+    return reply.status(400).send({
+      status: 'error',
+      code: 'VALIDATION_ERROR',
+      message: 'Dados inválidos',
+      errors: error.validation,
+    })
+  }
+
+  if (error instanceof ZodError) {
+    return reply.status(400).send({
+      status: 'error',
+      code: 'VALIDATION_ERROR',
+      message: 'Dados inválidos',
+      errors: error.flatten().fieldErrors,
+    })
+  }
+
+  if (error instanceof AppError) {
+    return reply.status(error.statusCode).send({
+      status: 'error',
+      code: error.code,
+      message: error.message,
+    })
+  }
+
+  app.log.error(error)
+  return reply.status(500).send({
+    status: 'error',
+    code: 'INTERNAL_SERVER_ERROR',
+    message: 'Erro interno do servidor',
   })
+})
 
   app.get('/health', {
     schema: {

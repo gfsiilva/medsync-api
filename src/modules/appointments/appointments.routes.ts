@@ -7,6 +7,29 @@ const appointmentsController = new AppointmentsController()
 const securedRoute = { security: [{ bearerAuth: [] }] }
 
 export async function appointmentsRoutes(app: FastifyInstance) {
+
+  // GET estático primeiro — evita conflito com /:id
+  app.get('/appointments/mine', {
+    schema: {
+      ...securedRoute,
+      tags: ['Appointments'],
+      summary: 'Listar minhas consultas',
+      description: 'Pacientes veem suas consultas. Medicos veem consultas com eles.',
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'number', default: 1 },
+          limit: { type: 'number', default: 10 },
+          status: {
+            type: 'string',
+            enum: ['SCHEDULED', 'CONFIRMED', 'CANCELLED', 'COMPLETED'],
+          },
+        },
+      },
+    },
+    preHandler: [authenticate],
+  }, appointmentsController.listMine.bind(appointmentsController))
+
   app.post('/appointments', {
     schema: {
       ...securedRoute,
@@ -24,7 +47,7 @@ export async function appointmentsRoutes(app: FastifyInstance) {
       },
       response: {
         201: { description: 'Consulta agendada com sucesso' },
-        409: { description: 'Medico ja possui consulta neste horario' },
+        409: { description: 'Médico ja possui consulta neste horario' },
       },
     },
     preHandler: [authenticate],
@@ -52,24 +75,4 @@ export async function appointmentsRoutes(app: FastifyInstance) {
     preHandler: [authenticate],
   }, appointmentsController.updateStatus.bind(appointmentsController))
 
-  app.get('/appointments/mine', {
-    schema: {
-      ...securedRoute,
-      tags: ['Appointments'],
-      summary: 'Listar minhas consultas',
-      description: 'Pacientes veem suas consultas. Medicos veem consultas com eles.',
-      querystring: {
-        type: 'object',
-        properties: {
-          page: { type: 'number', default: 1 },
-          limit: { type: 'number', default: 10 },
-          status: {
-            type: 'string',
-            enum: ['SCHEDULED', 'CONFIRMED', 'CANCELLED', 'COMPLETED'],
-          },
-        },
-      },
-    },
-    preHandler: [authenticate],
-  }, appointmentsController.listMine.bind(appointmentsController))
 }

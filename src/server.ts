@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { buildApp } from './app.js'
 import { env } from '@/config/env.js'
 import { prisma } from '@/config/database.js'
+import '@/infra/workers/email.worker.js'
 
 async function main() {
   // Teste de conexão com o banco

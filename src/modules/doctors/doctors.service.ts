@@ -1,6 +1,7 @@
 import { DoctorsRepository } from "./doctors.repository.js"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/shared/errors/AppError.js"
 import type { CreateDoctorProfileInput, UpdateDoctorProfileInput, ListDoctorsInput } from "./doctors.schema.js"
+import { redis } from '@/config/redis.js'
 
 export class DoctorsService {
   constructor(private readonly doctorsRepository: DoctorsRepository) {}
@@ -28,6 +29,12 @@ export class DoctorsService {
     if (!doctor) {
       throw new NotFoundError('Perfil médico')
     }
+
+    const keys = await redis.keys('doctors:*')
+    if (keys.length > 0) {
+      await redis.del(...keys)
+    }
+
     return this.doctorsRepository.update(doctor.id, input)
   }
 
@@ -40,6 +47,15 @@ export class DoctorsService {
   }
 
   async listDoctors(input: ListDoctorsInput) {
-    return this.doctorsRepository.findMany(input)
+    const cacheKey = `doctors:${JSON.stringify(input)}`
+
+    const cached = await redis.get(cacheKey)
+    if (cached) return cached
+
+    const result = await this.doctorsRepository.findMany(input)
+
+    await redis.set(cacheKey, result, { ex: 300 })
+
+    return result
   }
 }

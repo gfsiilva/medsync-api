@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { AppointmentsService } from './appointmets.service.js'
+import { AppointmentsService } from './appointments.service.js'
 import { AppointmentsRepository } from './appointments.repository.js'
 import { DoctorsRepository } from '../doctors/doctors.repository.js'
 import {

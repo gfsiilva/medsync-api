@@ -1,6 +1,7 @@
 // src/modules/auth/auth.routes.ts
 import type { FastifyInstance } from 'fastify'
 import { AuthController } from './auth.controller.js'
+import { env } from '@/config/env.js'
 
 const authController = new AuthController()
 
@@ -8,7 +9,7 @@ export async function authRoutes(app: FastifyInstance) {
   app.post('/auth/register', {
     config: {
       rateLimit: {
-        max: 3,
+        max: env.NODE_ENV === 'test' ? 1000 : 3,
         timeWindow: '1 hour',
       },
     },
@@ -56,7 +57,7 @@ export async function authRoutes(app: FastifyInstance) {
   app.post('/auth/login', {
     config: {
       rateLimit: {
-        max: 5,
+        max: env.NODE_ENV === 'test' ? 1000 : 5,
         timeWindow: '1 minute',
       },
     },
